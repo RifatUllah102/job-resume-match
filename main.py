@@ -27,14 +27,13 @@ TOKENIZER = BertTokenizer.from_pretrained('bert-base-uncased')
 MODEL = BertModel.from_pretrained('bert-base-uncased')
 JD_CACHE_FILE = "jd_cache.joblib"
 
-def preprocessing(pdf):
+def preprocessing(pdf, hr_stopwords=[]):
     with pdfplumber.open(pdf) as pdf_file:
         pages = pdf_file.pages
         text_pages = [page.extract_text() for page in pages]
 
     text = ' '.join(text_pages)
     file_clear = text.replace("\n", "")
-
 
     # Tokenize the text using SpaCy tokenizer
     doc = nlp(file_clear)
@@ -52,6 +51,8 @@ def preprocessing(pdf):
             if token_text not in STOP_WORDS:
                 token_lemma = token.lemma_
                 preprocessed_tokens.append(token_lemma)
+
+    STOP_WORDS.update(hr_stopwords)
 
     # Lemmatization
     preprocessed_text = ' '.join(preprocessed_tokens)
@@ -153,7 +154,40 @@ def get_jd_data():
         return cached_data
     else:
         jd = directory + "/JD/BusinessAnalyst.pdf"
-        jd_preprocessing = preprocessing(jd)
+        # Add HR domain-specific terms to the stopwords
+        hr_stopwords = [
+            "business analyst",
+            "data analysis",
+            "requirements gathering",
+            "data modeling",
+            "process improvement",
+            "project management",
+            "communication skills",
+            "problem-solving",
+            "analytical skills",
+            "critical thinking",
+            "technical skills",
+            "teamwork",
+            "documentation",
+            "presentation skills",
+            "MS Excel",
+            "SQL",
+            "Tableau",
+            "Power BI",
+            "Jira",
+            "Agile methodology",
+            "SDLC",
+            "data visualization",
+            "data interpretation",
+            "reporting",
+            "freshers",
+            "entry-level",
+            "graduate",
+            "internship",
+            "trainee"
+        ]
+    
+        jd_preprocessing = preprocessing(jd, hr_stopwords)
         jd_embeddings = bert_embedding(jd_preprocessing)
         jd_data = (jd_preprocessing, jd_embeddings)
         save_jd_data_to_cache(jd_data)
