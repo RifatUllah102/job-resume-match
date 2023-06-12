@@ -152,7 +152,7 @@ def get_jd_data():
     if cached_data is not None:
         return cached_data
     else:
-        jd = directory + "/JD/SFSoftwareDeveloper.pdf"
+        jd = directory + "/JD/BusinessAnalyst.pdf"
         jd_preprocessing = preprocessing(jd)
         jd_embeddings = bert_embedding(jd_preprocessing)
         jd_data = (jd_preprocessing, jd_embeddings)
