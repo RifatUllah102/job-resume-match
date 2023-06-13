@@ -22,7 +22,12 @@ class Scorer:
         wmd_score = self.ranker.rank_wmd(jd_preprocessing, cv_preprocessing)
         bert_score = self.ranker.rank_bert(jd_embeddings, cv_embeddings)
         score = self.ranker.rank_combined(cosine_score, wmd_score, bert_score, 0.30, 0.50)
-        return score
+        return {
+            'cosine_score': cosine_score,
+            'wmd_score': wmd_score,
+            'bert_score': bert_score,
+            'score': score
+        }
 
     def load_cached_jd_data(self):
         if os.path.isfile(self.JD_CACHE_FILE):
@@ -93,8 +98,8 @@ class Scorer:
                     futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_file) for cv_file in batch]
                     for future, cv_file in zip(futures, batch):
                         try:
-                            score = future.result()
-                            score_list.append({cv_file: score})
+                            result = future.result()
+                            score_list.append({cv_file: result})
                         except Exception as e:
                             print(f"Error processing {cv_file}: {e}")
                     batch = []
@@ -104,9 +109,9 @@ class Scorer:
                 futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_file) for cv_file in batch]
                 for future, cv_file in zip(futures, batch):
                     try:
-                        score = future.result()
-                        score_list.append({cv_file: score})
+                        result = future.result()
+                        score_list.append({cv_file: result})
                     except Exception as e:
                         print(f"Error processing {cv_file}: {e}")
 
-        return sorted(score_list, key=lambda x: list(x.values())[0], reverse=True)
+        return sorted(score_list, key=lambda x: list(x.values())[0]["score"], reverse=True)
