@@ -17,7 +17,7 @@ class Scorer:
     def process_cv(self, jd_preprocessing, jd_embeddings, cv_file):
         cv = self.directory + "/CV/" + cv_file
         cv_preprocessing = self.preprocessor.preprocess(cv)
-        cv_embeddings = self.embedder.bert_embedding(cv_preprocessing)
+        cv_embeddings = self.embedder.embedding(cv_preprocessing)
         cosine_score = self.ranker.rank_cosine(jd_preprocessing, cv_preprocessing)
         wmd_score = self.ranker.rank_wmd(jd_preprocessing, cv_preprocessing)
         bert_score = self.ranker.rank_bert(jd_embeddings, cv_embeddings)
@@ -78,7 +78,7 @@ class Scorer:
             ]
 
             jd_preprocessing = self.preprocessor.preprocess(jd, hr_stopwords)
-            jd_embeddings = self.embedder.bert_embedding(jd_preprocessing)
+            jd_embeddings = self.embedder.embedding(jd_preprocessing)
             jd_data = (jd_preprocessing, jd_embeddings)
             self.save_jd_data_to_cache(jd_data)
             return jd_data

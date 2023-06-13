@@ -1,6 +1,7 @@
 from transformers import BertTokenizer, BertModel
 import torch
 import numpy as np
+from gensim.models import Word2Vec
 
 MAX_EMBEDDING_LENGTH = 500  # Maximum length for embeddings
 
@@ -8,6 +9,14 @@ class Embedder:
     def __init__(self):
         self.TOKENIZER = BertTokenizer.from_pretrained('bert-base-uncased')
         self.MODEL = BertModel.from_pretrained('bert-base-uncased')
+        self.word2vec = Word2Vec(min_count=20,
+            window=3,
+            vector_size=300,
+            sample=6e-5,
+            alpha=0.03,
+            min_alpha=0.0007,
+            negative=20
+        )
 
     def bert_embedding(self, text):
         # Tokenize input text
@@ -39,4 +48,21 @@ class Embedder:
         # Concatenate segment embeddings
         embeddings = np.concatenate(segment_embeddings, axis=0)
 
-        return embeddings
+        return torch.tensor(embeddings), embeddings
+
+    def word2vec_embedding(self, text):
+        tokens = text.split()  # Tokenize text into words
+        embeddings = [self.word2vec.wv[word] for word in tokens if word in self.word2vec.wv]
+        embeddings = np.array(embeddings)
+        return torch.tensor(embeddings), embeddings
+
+    def embedding(self, text):
+        # Obtain BERT embeddings
+        bert_embeddings, _ = self.bert_embedding(text)
+
+        # Obtain Word2Vec embeddings
+        word2vec_embeddings, _ = self.word2vec_embedding(text)
+
+        # Concatenate BERT and Word2Vec embeddings
+        combined_embeddings = torch.cat((bert_embeddings, word2vec_embeddings), dim=1)
+        return combined_embeddings
