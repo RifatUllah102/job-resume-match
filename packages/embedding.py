@@ -23,8 +23,21 @@ class Embedder:
         tokens = self.TOKENIZER.tokenize(text)
 
         # Split tokens into segments of maximum sequence length
-        max_length = MAX_EMBEDDING_LENGTH - 2  # Account for [CLS] and [SEP] tokens
-        segment_tokens = [tokens[i:i+max_length] for i in range(0, len(tokens), max_length)]
+        segment_tokens = []
+        current_segment = []
+        current_segment_length = 0
+
+        for token in tokens:
+            current_segment.append(token)
+            current_segment_length += len(token)
+
+            if current_segment_length >= MAX_EMBEDDING_LENGTH - 2:
+                segment_tokens.append(current_segment)
+                current_segment = []
+                current_segment_length = 0
+
+        if current_segment:
+            segment_tokens.append(current_segment)
 
         # Initialize a list to store segment embeddings
         segment_embeddings = []
@@ -37,10 +50,13 @@ class Embedder:
             indexed_tokens = self.TOKENIZER.convert_tokens_to_ids(segment_with_special_tokens)
             tokens_tensor = torch.tensor([indexed_tokens])
 
+            # Obtain attention mask
+            attention_mask = torch.ones_like(tokens_tensor)
+
             # Obtain BERT embeddings
             with torch.no_grad():
                 self.MODEL.eval()
-                outputs = self.MODEL(tokens_tensor)
+                outputs = self.MODEL(tokens_tensor, attention_mask=attention_mask)
                 embeddings = outputs[0].squeeze(0).numpy()  # Reshape embeddings to 2D
 
             segment_embeddings.append(embeddings)

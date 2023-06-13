@@ -27,11 +27,12 @@ class Preprocessor:
 
             # Remove punctuation and non-alphabetic tokens
             if token_text not in string.punctuation and token.is_alpha:
-                # Remove stopwords and perform lemmatization
-                if token_text not in STOP_WORDS:
+                # Remove stopwords, perform lemmatization, and filter based on POS
+                if token_text not in STOP_WORDS and token.pos_ not in ['PUNCT', 'SYM']:
                     token_lemma = token.lemma_
                     preprocessed_tokens.append(token_lemma)
 
+        # Add custom stopwords
         STOP_WORDS.update(hr_stopwords)
 
         # Lemmatization
