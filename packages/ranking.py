@@ -22,7 +22,16 @@ class Ranker:
         cv_doc = cv.split()
 
         # Build Word2Vec models for the documents
-        model = Word2Vec([jd_doc, cv_doc], min_count=1)
+        model = Word2Vec(
+            [jd_doc, cv_doc],
+            min_count=1,
+            window=3,
+            vector_size=300,
+            sample=6e-5,
+            alpha=0.03,
+            min_alpha=0.0007,
+            negative=20
+        )
 
         # Calculate the WMD
         distance = model.wv.wmdistance(jd_doc, cv_doc, lambda x, y: model.wv.distance(x, y))

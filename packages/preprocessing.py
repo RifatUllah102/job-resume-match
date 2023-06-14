@@ -2,6 +2,7 @@ import pdfplumber
 import string
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
+from collections import Counter
 
 class Preprocessor:
     def __init__(self):

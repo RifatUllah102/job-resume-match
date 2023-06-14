@@ -1,6 +1,5 @@
 import concurrent.futures
 import os
-import joblib
 
 from .preprocessing import Preprocessor
 from .embedding import Embedder
@@ -9,7 +8,6 @@ from .ranking import Ranker
 class Scorer:
     def __init__(self):
         self.directory = os.getcwd()
-        self.JD_CACHE_FILE = "jd_cache.joblib"
         self.preprocessor = Preprocessor()
         self.embedder = Embedder()
         self.ranker = Ranker()
@@ -21,7 +19,7 @@ class Scorer:
         cosine_score = self.ranker.rank_cosine(jd_preprocessing, cv_preprocessing)
         wmd_score = self.ranker.rank_wmd(jd_preprocessing, cv_preprocessing)
         bert_score = self.ranker.rank_bert(jd_embeddings, cv_embeddings)
-        score = self.ranker.rank_combined(cosine_score, wmd_score, bert_score, 0.30, 0.50)
+        score = self.ranker.rank_combined(cosine_score, wmd_score, bert_score, 0.20, 0.60)
         return {
             'cosine_score': cosine_score,
             'wmd_score': wmd_score,
@@ -29,59 +27,46 @@ class Scorer:
             'score': score
         }
 
-    def load_cached_jd_data(self):
-        if os.path.isfile(self.JD_CACHE_FILE):
-            return joblib.load(self.JD_CACHE_FILE)
-        else:
-            return None
-
-    def save_jd_data_to_cache(self, data):
-        joblib.dump(data, self.JD_CACHE_FILE)
-
     def get_jd_data(self):
-        cached_data = self.load_cached_jd_data()
-        if cached_data is not None:
-            return cached_data
-        else:
-            jd = self.directory + "/JD/BusinessAnalyst.pdf"
-            # Add HR domain-specific terms to the stopwords
-            hr_stopwords = [
-                "business analyst",
-                "data analysis",
-                "requirements gathering",
-                "data modeling",
-                "process improvement",
-                "project management",
-                "communication skills",
-                "problem-solving",
-                "analytical skills",
-                "critical thinking",
-                "technical skills",
-                "teamwork",
-                "documentation",
-                "presentation skills",
-                "MS Excel",
-                "SQL",
-                "Tableau",
-                "Power BI",
-                "Jira",
-                "Agile methodology",
-                "SDLC",
-                "data visualization",
-                "data interpretation",
-                "reporting",
-                "freshers",
-                "entry-level",
-                "graduate",
-                "internship",
-                "trainee"
-            ]
+        jd = self.directory + "/JD/BusinessAnalyst.pdf"
+        # Add HR domain-specific terms to the stopwords
+        hr_stopwords = [
+            "business analyst",
+            "data analysis",
+            "requirements gathering",
+            "data modeling",
+            "process improvement",
+            "project management",
+            "communication",
+            "problem-solving",
+            "analytical skills",
+            "critical thinking",
+            "teamwork",
+            "documentation",
+            "presentation skills",
+            "MS Excel",
+            "SQL",
+            "Tableau",
+            "Power BI",
+            "Jira",
+            "Agile methodology",
+            "SDLC",
+            "data visualization",
+            "data interpretation",
+            "UAT",
+            "BRD",
+            "SRS",
+            "UML Diagram",
+            "Technical Documentation",
+            "Trello",
+            "Leadership",
+            "Extra-curricular activities"
+        ]
 
-            jd_preprocessing = self.preprocessor.preprocess(jd, hr_stopwords)
-            jd_embeddings = self.embedder.embedding(jd_preprocessing)
-            jd_data = (jd_preprocessing, jd_embeddings)
-            self.save_jd_data_to_cache(jd_data)
-            return jd_data
+        jd_preprocessing = self.preprocessor.preprocess(jd, hr_stopwords)
+        jd_embeddings = self.embedder.embedding(jd_preprocessing)
+        jd_data = (jd_preprocessing, jd_embeddings)
+        return jd_data
 
     def get_score(self):
         jd_preprocessing, jd_embeddings = self.get_jd_data()
