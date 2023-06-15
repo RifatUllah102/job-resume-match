@@ -1,9 +1,21 @@
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim.models import Word2Vec
+from gensim.models.doc2vec import Doc2Vec
 import numpy as np
+from numpy.linalg import norm 
 
 class Ranker:
+    def __init__(self):
+        self.word2vec = Word2Vec(min_count=20,
+            window=3,
+            vector_size=300,
+            sample=6e-5,
+            alpha=0.03,
+            min_alpha=0.0007,
+            negative=20
+        )
+
     def rank_cosine(self, jd, cv):
         Match_Test = [jd, cv]
         vector = TfidfVectorizer(
@@ -45,6 +57,13 @@ class Ranker:
         similarity = cosine_similarity(jd, cv)[0][0]
         match_percentage = round(similarity * 100, 2)
         return match_percentage
+
+    def rank_doc2vec(self, jd, cv):
+        model = Doc2Vec.load('doc2vec.model')
+        v1 = model.infer_vector(cv.split())
+        v2 = model.infer_vector(jd.split())
+        cosine_similarity = (np.dot(np.array(v1), np.array(v2))) / (norm(np.array(v1)) * norm(np.array(v2))) * 100
+        return float(cosine_similarity)
 
     def rank_combined(self, cosine_score, wmd_score, bert_score, wmd_weight=0.35, bert_weight=0.35):
         # Calculate combined score using weighted average
