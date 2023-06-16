@@ -18,14 +18,12 @@ class Scorer:
         cv_embeddings = self.embedder.embedding(cv_preprocessing)
         cosine_score = self.ranker.rank_cosine(jd_preprocessing, cv_preprocessing)
         wmd_score = self.ranker.rank_wmd(jd_preprocessing, cv_preprocessing)
-        wmd_bert_score = self.ranker.rank_wmd_bert(jd_embeddings, cv_embeddings)
         bert_score = self.ranker.rank_bert(jd_embeddings, cv_embeddings)
         doc2vec_score = self.ranker.rank_doc2vec(jd_preprocessing, cv_preprocessing)
-        score = self.ranker.rank_combined(cosine_score, wmd_score, bert_score, 0.20, 0.60)
+        score = self.ranker.rank_combined(cosine_score, wmd_score, bert_score, 0.15, 0.50, 0.25)
         return {
             'cosine_score': cosine_score,
             'wmd_score': wmd_score,
-            'wmd_bert_score': wmd_bert_score,
             'bert_score': bert_score,
             'doc2vec_score': doc2vec_score,
             'score': score

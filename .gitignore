@@ -22,6 +22,7 @@ media
 
 # C extensions
 *.so
+*.model
 
 # Distribution / packaging
 .Python

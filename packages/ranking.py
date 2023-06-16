@@ -65,8 +65,16 @@ class Ranker:
         cosine_similarity = (np.dot(np.array(v1), np.array(v2))) / (norm(np.array(v1)) * norm(np.array(v2))) * 100
         return float(cosine_similarity)
 
-    def rank_combined(self, cosine_score, wmd_score, bert_score, wmd_weight=0.35, bert_weight=0.35):
+    def rank_combined(
+            self,
+            cosine_score,
+            wmd_score,
+            bert_score,
+            doc2vec_score,
+            wmd_weight=0.25,
+            bert_weight=0.25,
+            doc2vec_weight=0.25):
         # Calculate combined score using weighted average
-        combined_score = (wmd_weight * wmd_score) + (bert_weight * bert_score) + ((1 - (wmd_weight+bert_weight)) * cosine_score)
+        combined_score = (wmd_weight * wmd_score) + (bert_weight * bert_score) + (doc2vec_score * doc2vec_weight) + ((1 - (wmd_weight+bert_weight+doc2vec_weight)) * cosine_score)
         combined_score = round(combined_score, 2)
         return combined_score

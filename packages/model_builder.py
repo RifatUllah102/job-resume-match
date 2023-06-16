@@ -11,10 +11,10 @@ class ModelBuilder:
 
     def build_doc2vec(self):
         data = pd.read_csv(self.directory + '/data/UpdatedResumeDataSet.csv')
-        data = list(data['Resume'])
+        cv_data = list(data['Resume'])
         tagged_data = [
             TaggedDocument(words=[token.text.lower() for token in nlp(_d)], tags=[str(i)])
-            for i, _d in enumerate(data)
+            for i, _d in enumerate(cv_data)
         ]
         model = Doc2Vec(
             vector_size=300,
