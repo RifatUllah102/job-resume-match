@@ -3,14 +3,14 @@ import re
 import spacy
 from spacy.matcher import Matcher
 from nltk.corpus import stopwords
-from packages.skill_corpas import Skill_Corpus
+from packages.skill_corpas import SkillCorpus
 
 class CVParser:
-    def __init__(self):
+    def __init__(self, filePath):
         self.nlp = spacy.load('en_core_web_sm')
         self.matcher = Matcher(self.nlp.vocab)
-        self.skill_corpus = Skill_Corpus()
-        self.skills = self.skill_corpus.create_corpus()
+        self.skill_corpus = SkillCorpus()
+        self.skills = self.skill_corpus.load_corpus(filePath)
 
     def parse_cv(self, pdf_path):
         try:

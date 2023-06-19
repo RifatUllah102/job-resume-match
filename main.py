@@ -3,17 +3,18 @@ from packages.scoring import Scorer
 from packages.model_builder import ModelBuilder
 from packages.preprocessing import Preprocessor
 from packages.resume_parser import CVParser
-from packages.skill_corpas import Skill_Corpus
+from packages.skill_corpas import SkillCorpus
 
 import os
 
+# File path to store the skill corpus
+skill_corpus_file = "skill_corpus.pkl"
 
 app = FastAPI()
 scorer = Scorer()
 model_builder = ModelBuilder()
 preprocessor = Preprocessor()
-parser = CVParser()
-corpus = Skill_Corpus()
+parser = CVParser(skill_corpus_file)
 
 @app.get("/rank")
 def get_score():
@@ -45,6 +46,10 @@ def get_resume_parser():
         })
     return res
 
-@app.get("/skills")
-def get_skills():
-    return corpus.create_corpus()
+@app.get("/save-skills")
+def save_skillCorpus():
+    # Create an instance of SkillCorpus
+    skill_corpus = SkillCorpus()
+    # Save the skill corpus to a file
+    skill_corpus.save_corpus(skill_corpus_file)
+    return 'OK'
