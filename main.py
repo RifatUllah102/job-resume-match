@@ -1,10 +1,11 @@
 from fastapi import FastAPI
+from typing import List
 from packages.scoring import Scorer
 from packages.model_builder import ModelBuilder
 from packages.preprocessing import Preprocessor
 from packages.resume_parser import CVParser
 from packages.skill_corpas import SkillCorpus
-
+import json
 import os
 
 # File path to store the skill corpus
@@ -17,8 +18,9 @@ preprocessor = Preprocessor()
 parser = CVParser(skill_corpus_file)
 
 @app.get("/rank")
-def get_score():
-    return scorer.get_score()
+def get_score(keyword):
+    keyword = json.loads(keyword)
+    return scorer.get_score(keyword)
 
 @app.get("/build-model/doc2vec")
 def get_score():
@@ -37,13 +39,14 @@ def get_preprocessed():
     return res
 
 @app.get("/resume-parser")
-def get_resume_parser():
+def get_resume_parser(filter):
+    filter = json.loads(filter)
     folder = os.listdir(os.getcwd() + "/CV")
     res = []
     for cv_file in folder:
         cv = os.getcwd() + "/CV/" + cv_file
         res.append({
-            cv_file: parser.parse_cv(cv)
+            cv_file: parser.parse_cv(cv, filter)
         })
     return res
 

@@ -4,6 +4,9 @@ from gensim.models import Word2Vec
 from gensim.models.doc2vec import Doc2Vec
 import numpy as np
 from numpy.linalg import norm 
+from packages.resume_parser import CVParser
+
+skill_corpus_file = "skill_corpus.pkl"
 
 class Ranker:
     def __init__(self):
@@ -15,6 +18,13 @@ class Ranker:
             min_alpha=0.0007,
             negative=20
         )
+        self.parser = CVParser(skill_corpus_file)
+
+    def rank_keyword(self, cv, keyword):
+        print('from rank_keyword', len(keyword))
+        match_keyword = self.parser.extract_keyword(cv, keyword)
+        rank = (len(match_keyword) / len(keyword)) * 100
+        return round(rank, 2)
 
     def rank_cosine(self, jd, cv):
         Match_Test = [jd, cv]
@@ -63,16 +73,18 @@ class Ranker:
         v1 = model.infer_vector(cv.split())
         v2 = model.infer_vector(jd.split())
         cosine_similarity = (np.dot(np.array(v1), np.array(v2))) / (norm(np.array(v1)) * norm(np.array(v2))) * 100
-        return float(cosine_similarity)
+        return round(float(cosine_similarity), 2)
 
     def rank_combined(
             self,
             cosine_score,
             bert_score,
             doc2vec_score,
+            keyword_score,
             bert_weight=0.25,
             doc2vec_weight=0.25):
         # Calculate combined score using weighted average
-        combined_score = (bert_weight * bert_score) + (doc2vec_score * doc2vec_weight) + ((1 - (bert_weight+doc2vec_weight)) * cosine_score)
+        cosine_keyword_score = (cosine_score * 0.25) + (keyword_score * 0.75)
+        combined_score = (bert_weight * bert_score) + (doc2vec_score * doc2vec_weight) + ((1 - (bert_weight+doc2vec_weight)) * cosine_keyword_score)
         combined_score = round(combined_score, 2)
         return combined_score

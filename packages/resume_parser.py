@@ -12,7 +12,7 @@ class CVParser:
         self.skill_corpus = SkillCorpus()
         self.skills = self.skill_corpus.load_corpus(filePath)
 
-    def parse_cv(self, pdf_path):
+    def parse_cv(self, pdf_path, keyword=[]):
         try:
             file_data = parser.from_file(pdf_path)
             text = file_data['content']
@@ -23,6 +23,7 @@ class CVParser:
                 'skills': self.extract_skills(text),
                 'education': self.extract_education(text),
                 'experience': self.extract_experience(text),
+                'keyword': self.extract_keyword(text, keyword)
             }
             return cv
         except Exception as e:
@@ -107,3 +108,27 @@ class CVParser:
         pattern = '({})'.format('|'.join(sub_patterns))
         experience = re.findall(pattern, resume_text)
         return experience
+
+    def extract_keyword(self, resume_text, keyword):
+        if len(keyword) > 0:
+            keyword = [x.lower() for x in keyword]
+        resume_text = resume_text.lower()
+        nlp_text = self.nlp(resume_text)
+
+        # removing stop words and implementing word tokenization
+        tokens = [token.text for token in nlp_text if not token.is_stop]
+
+        res = []
+
+        # check for one-grams (example: python)
+        for token in tokens:
+            if token.lower() in keyword:
+                res.append(token)
+
+        # check for bi-grams and tri-grams (example: machine learning)
+        for token in nlp_text.noun_chunks:
+            token = token.text.lower().strip()
+            if token in keyword:
+                res.append(token)
+
+        return [i.capitalize() for i in set([i.lower() for i in res])]
