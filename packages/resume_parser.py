@@ -112,6 +112,8 @@ class CVParser:
     def extract_keyword(self, resume_text, keyword):
         if len(keyword) > 0:
             keyword = [x.lower() for x in keyword]
+
+        resume_text = re.sub(r'\s+', ' ', resume_text.replace("\n", " "))
         resume_text = resume_text.lower()
         nlp_text = self.nlp(resume_text)
 
