@@ -4,25 +4,38 @@ import string
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from nltk.tokenize import sent_tokenize
-from collections import Counter
+from tika import parser
+from nltk.stem import PorterStemmer
 
 class Preprocessor:
     def __init__(self):
         self.nlp = spacy.load('en_core_web_sm')
+        self.stemmer = PorterStemmer()
 
-    def preprocess(self, pdf, hr_stopwords=[]):
+    def read_pdf_pdfPlumber(self, pdf):
         with pdfplumber.open(pdf) as pdf_file:
             pages = pdf_file.pages
             text_pages = [page.extract_text() for page in pages]
 
-        text = ' '.join(text_pages)
-        file_clear = text.replace("\n", "")
+        return ' '.join(text_pages)
 
-        # Remove extra whitespaces between words
-        file_clear = re.sub(r'\s+', ' ', file_clear)
+    def read_pdf_tika(self, pdf):
+        file_data = parser.from_file(pdf)
+        text = file_data['content']
+        return text
 
-        # Split merged words using specific rules
-        file_clear = re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Za-z])(?=[0-9])|(?<=[0-9])(?=[A-Za-z])|(?<=[A-Za-z0-9])(?=[A-Z]{2,})', ' ', file_clear)
+    def read_pdf(self, pdf):
+        return self.read_pdf_tika(pdf)
+
+    def preprocess(self, text, hr_keyword=[]):
+        # Remove newlines and extra whitespaces
+        file_clear = re.sub(r'\s+', ' ', text.replace("\n", " "))
+
+        # Add HR keywords
+        file_clear = file_clear + ' ' + ' '.join(hr_keyword)
+
+        # Convert text to lowercase
+        file_clear = file_clear.lower()
 
         # Tokenize the text into sentences
         sentences = sent_tokenize(file_clear)
@@ -43,19 +56,19 @@ class Preprocessor:
 
                 # Remove punctuation and non-alphabetic tokens
                 if token_text not in string.punctuation and token.is_alpha:
-                    # Remove stopwords, perform lemmatization, and filter based on POS
+                    # Remove stopwords, perform stemming, and filter based on POS
                     if token_text not in STOP_WORDS and token.pos_ not in ['PUNCT', 'SYM']:
-                        token_lemma = token.lemma_
-                        preprocessed_tokens.append(token_lemma)
+                        token_stem = self.stemmer.stem(token_text)
+                        preprocessed_tokens.append(token_stem)
 
-            # Add custom stopwords
-            STOP_WORDS.update(hr_stopwords)
-
-            # Lemmatization
+            # Join preprocessed tokens into a sentence
             preprocessed_sentence = ' '.join(preprocessed_tokens)
             preprocessed_sentences.append(preprocessed_sentence)
 
-        # Join the preprocessed sentences into a single text
+        # Join preprocessed sentences into a single text
         preprocessed_text = ' '.join(preprocessed_sentences)
+
+        # Remove duplicate words
+        preprocessed_text = ' '.join(list(set(preprocessed_text.split())))
 
         return preprocessed_text

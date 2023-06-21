@@ -14,17 +14,18 @@ class Scorer:
 
     def process_cv(self, jd_preprocessing, jd_embeddings, cv_file):
         cv = self.directory + "/CV/" + cv_file
-        cv_preprocessing = self.preprocessor.preprocess(cv)
+        cv_text = self.preprocessor.read_pdf(cv)
+        cv_preprocessing = self.preprocessor.preprocess(cv_text)
         cv_embeddings = self.embedder.embedding(cv_preprocessing)
         cosine_score = self.ranker.rank_cosine(jd_preprocessing, cv_preprocessing)
         wmd_score = self.ranker.rank_wmd(jd_preprocessing, cv_preprocessing)
         bert_score = self.ranker.rank_bert(jd_embeddings, cv_embeddings)
         doc2vec_score = self.ranker.rank_doc2vec(jd_preprocessing, cv_preprocessing)
-        score = self.ranker.rank_combined(cosine_score, wmd_score, bert_score, 0.15, 0.50, 0.25)
+        score = self.ranker.rank_combined(cosine_score, bert_score, doc2vec_score, 0.45, 0.10)
         return {
             'cosine_score': cosine_score,
-            'wmd_score': wmd_score,
             'bert_score': bert_score,
+            'wmd_score': wmd_score,
             'doc2vec_score': doc2vec_score,
             'score': score
         }
@@ -32,7 +33,7 @@ class Scorer:
     def get_jd_data(self):
         jd = self.directory + "/JD/BusinessAnalyst.pdf"
         # Add HR domain-specific terms to the stopwords
-        hr_stopwords = [
+        hr_keyword = [
             "business analyst",
             "data analysis",
             "requirements gathering",
@@ -55,6 +56,7 @@ class Scorer:
             "SDLC",
             "data visualization",
             "data interpretation",
+            "User Acceptance Testing",
             "UAT",
             "BRD",
             "SRS",
@@ -65,7 +67,8 @@ class Scorer:
             "Extra-curricular activities"
         ]
 
-        jd_preprocessing = self.preprocessor.preprocess(jd, hr_stopwords)
+        jd_text = self.preprocessor.read_pdf(jd)
+        jd_preprocessing = self.preprocessor.preprocess(jd_text, hr_keyword)
         jd_embeddings = self.embedder.embedding(jd_preprocessing)
         jd_data = (jd_preprocessing, jd_embeddings)
         return jd_data

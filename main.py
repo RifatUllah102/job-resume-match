@@ -30,8 +30,9 @@ def get_preprocessed():
     res = []
     for cv_file in folder:
         cv = os.getcwd() + "/CV/" + cv_file
+        file = preprocessor.read_pdf(cv)
         res.append({
-            cv_file: preprocessor.preprocess(cv)
+            cv_file: preprocessor.preprocess(file)
         })
     return res
 
