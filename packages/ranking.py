@@ -21,7 +21,6 @@ class Ranker:
         self.parser = CVParser(skill_corpus_file)
 
     def rank_keyword(self, cv, keyword):
-        print('from rank_keyword', len(keyword))
         match_keyword = self.parser.extract_keyword(cv, keyword)
         rank = (len(match_keyword) / len(keyword)) * 100
         return round(rank, 2)

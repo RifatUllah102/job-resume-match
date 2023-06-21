@@ -16,7 +16,6 @@ class Scorer:
         self.ranker = Ranker()
 
     def process_cv(self, jd_preprocessing, jd_embeddings, cv_file, keyword = []):
-        print('from process_cv: ', len(keyword))
         cv = self.directory + "/CV/" + cv_file
         cv_text = self.preprocessor.read_pdf(cv)
         cv_preprocessing = self.preprocessor.preprocess(cv_text)
@@ -29,8 +28,10 @@ class Scorer:
         score = self.ranker.rank_combined(cosine_score, bert_score, doc2vec_score, keyword_score, 0.45, 0.10)
         return {
             'cosine_score': cosine_score,
+            'keyword_score': keyword_score,
+            'cosign_keyword': (cosine_score * 0.25) + (keyword_score * 0.75),
             'bert_score': bert_score,
-            'wmd_score': wmd_score,
+            'wmd_score': wmd_score,            
             'doc2vec_score': doc2vec_score,
             'score': score
         }
@@ -44,7 +45,6 @@ class Scorer:
         return jd_data
 
     def get_score(self, keyword=[]):
-        print('from get_score: ', len(keyword))
         jd_preprocessing, jd_embeddings = self.get_jd_data(keyword)
         folder = os.listdir(self.directory + "/CV")
 
