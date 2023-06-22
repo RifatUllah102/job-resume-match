@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from typing import List
 from packages.scoring import Scorer
 from packages.model_builder import ModelBuilder
@@ -7,6 +8,12 @@ from packages.resume_parser import CVParser
 from packages.skill_corpas import SkillCorpus
 import json
 import os
+
+class RankBody(BaseModel):
+    jd_path: str
+    cv_folder: str
+    keyword: List[str]
+
 
 # File path to store the skill corpus
 skill_corpus_file = "skill_corpus.pkl"
@@ -17,10 +24,9 @@ model_builder = ModelBuilder()
 preprocessor = Preprocessor()
 parser = CVParser(skill_corpus_file)
 
-@app.get("/rank")
-def get_score(keyword):
-    keyword = json.loads(keyword)
-    return scorer.get_score(keyword)
+@app.post("/rank")
+def get_score(body: RankBody):
+    return scorer.get_score(body.jd_path, body.cv_folder, body.keyword)
 
 @app.get("/build-model/doc2vec")
 def get_score():
