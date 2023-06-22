@@ -25,15 +25,15 @@ class Scorer:
         wmd_score = self.ranker.rank_wmd(jd_preprocessing, cv_preprocessing)
         bert_score = self.ranker.rank_bert(jd_embeddings, cv_embeddings)
         doc2vec_score = self.ranker.rank_doc2vec(jd_preprocessing, cv_preprocessing)
-        score = self.ranker.rank_combined(cosine_score, bert_score, doc2vec_score, keyword_score, 0.45, 0.10)
+        score = self.ranker.rank_combined(cosine_score, bert_score, doc2vec_score, keyword_score, wmd_score, 0.45, 0.10)
         return {
             'cosine_score': cosine_score,
             'keyword_score': keyword_score,
             'cosign_keyword': (cosine_score * 0.25) + (keyword_score * 0.75),
             'bert_score': bert_score,
-            'wmd_score': wmd_score,            
+            'wmd_score': wmd_score,
             'doc2vec_score': doc2vec_score,
-            'score': score
+            'score': score,
         }
 
     def get_jd_data(self, keyword=[]):
@@ -54,7 +54,6 @@ class Scorer:
         with concurrent.futures.ProcessPoolExecutor() as executor:
             batch = []
             for cv_file in folder:
-                print('from get_score: ', cv_file, len(keyword))
                 batch.append(cv_file)
                 if len(batch) == batch_size:
                     futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_file, keyword) for cv_file in batch]

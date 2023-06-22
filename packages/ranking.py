@@ -3,7 +3,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim.models import Word2Vec
 from gensim.models.doc2vec import Doc2Vec
 import numpy as np
-from numpy.linalg import norm 
+from numpy.linalg import norm
 from packages.resume_parser import CVParser
 
 skill_corpus_file = "skill_corpus.pkl"
@@ -19,6 +19,12 @@ class Ranker:
             negative=20
         )
         self.parser = CVParser(skill_corpus_file)
+
+    def z_score_normalization(self, scores):
+        mean = np.mean(scores)
+        std = np.std(scores)
+        normalized_scores = (scores - mean) / std
+        return normalized_scores
 
     def rank_keyword(self, cv, keyword):
         match_keyword = self.parser.extract_keyword(cv, keyword)
@@ -80,10 +86,39 @@ class Ranker:
             bert_score,
             doc2vec_score,
             keyword_score,
+            wmd_score,
             bert_weight=0.25,
             doc2vec_weight=0.25):
-        # Calculate combined score using weighted average
-        cosine_keyword_score = (cosine_score * 0.25) + (keyword_score * 0.75)
-        combined_score = (bert_weight * bert_score) + (doc2vec_score * doc2vec_weight) + ((1 - (bert_weight+doc2vec_weight)) * cosine_keyword_score)
+
+        # Combine cosine score and keyword score with weights
+        combined_cosine_keyword = (0.25 * cosine_score) + (0.75 * keyword_score)
+
+        # Combine BERT score and WMD score with weights
+        combined_bert_wmd = (0.95 * bert_score) + (0.05 * wmd_score)
+
+        combined_score = (combined_bert_wmd * bert_weight) + (doc2vec_score * doc2vec_weight) + ((1 - (bert_weight+doc2vec_weight)) * combined_cosine_keyword)
         combined_score = round(combined_score, 2)
         return combined_score
+
+    def rank_combined2(
+            self,
+            cosine_score,
+            keyword_score,
+            bert_score,
+            wmd_score,
+            doc2vec_score,
+        ):
+        # Combine cosine score and keyword score with weights
+        combined_cosine_keyword = (0.20 * cosine_score) + (0.80 * keyword_score)
+
+        # Combine BERT score and WMD score with weights
+        combined_bert_wmd = (0.95 * bert_score) + (0.05 * wmd_score)
+
+        # Normalize the scores using z-score normalization
+        scores = [combined_cosine_keyword, combined_bert_wmd, doc2vec_score]
+        normalized_scores = self.z_score_normalization(scores)
+
+        # Calculate the probabilistic score as the product of the normalized scores
+        probabilistic_score = np.prod(normalized_scores)
+
+        return probabilistic_score
