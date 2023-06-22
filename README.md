@@ -4,6 +4,7 @@ This is an application for ranking resumes (CVs) based on their similarity to a 
 
 ## Table of Contents
 
+* Requirements
 * Prerequisites
 * Installation
 * Usage
@@ -14,6 +15,11 @@ This is an application for ranking resumes (CVs) based on their similarity to a 
 * License
 * Contact
 
+## Requirements
+This project has the following requirements:
+
+* Java 8 or higher
+* Python 3.10 or higher
 
 ## Prerequisites
 * Python 3.7 or higher
