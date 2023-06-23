@@ -31,6 +31,36 @@ class Ranker:
         rank = (len(match_keyword) / len(keyword)) * 100
         return round(rank, 2)
 
+    def rank_jaccard_keyword(self, cv, keyword):
+        # Preprocess the documents
+        cv = cv.lower().strip()
+        keyword = [x.lower() for x in keyword]
+        cv_words = set(cv.split())
+        keyword_words = set(keyword)
+
+        # Calculate the intersection and union of word sets
+        intersection = cv_words.intersection(keyword_words)
+        union = cv_words.union(keyword_words)
+
+        # Calculate Jaccard similarity
+        similarity = len(intersection) / len(union)
+        return similarity
+
+    def rank_jaccard(self, jd, cv):
+        # Preprocess the documents
+        jd = jd.lower().strip()
+        cv = cv.lower().strip()
+        jd_words = set(jd.split())
+        cv_words = set(cv.split())
+
+        # Calculate the intersection and union of word sets
+        intersection = jd_words.intersection(cv_words)
+        union = jd_words.union(cv_words)
+
+        # Calculate Jaccard similarity
+        similarity = len(intersection) / len(union)
+        return similarity
+
     def rank_cosine(self, jd, cv):
         Match_Test = [jd, cv]
         vector = TfidfVectorizer(
@@ -99,26 +129,3 @@ class Ranker:
         combined_score = (combined_bert_wmd * bert_weight) + (doc2vec_score * doc2vec_weight) + ((1 - (bert_weight+doc2vec_weight)) * combined_cosine_keyword)
         combined_score = round(combined_score, 2)
         return combined_score
-
-    def rank_combined2(
-            self,
-            cosine_score,
-            keyword_score,
-            bert_score,
-            wmd_score,
-            doc2vec_score,
-        ):
-        # Combine cosine score and keyword score with weights
-        combined_cosine_keyword = (0.20 * cosine_score) + (0.80 * keyword_score)
-
-        # Combine BERT score and WMD score with weights
-        combined_bert_wmd = (0.95 * bert_score) + (0.05 * wmd_score)
-
-        # Normalize the scores using z-score normalization
-        scores = [combined_cosine_keyword, combined_bert_wmd, doc2vec_score]
-        normalized_scores = self.z_score_normalization(scores)
-
-        # Calculate the probabilistic score as the product of the normalized scores
-        probabilistic_score = np.prod(normalized_scores)
-
-        return probabilistic_score

@@ -19,7 +19,9 @@ class Scorer:
         cv_preprocessing = self.preprocessor.preprocess(cv_text)
         cv_embeddings = self.embedder.embedding(cv_preprocessing)
         cosine_score = self.ranker.rank_cosine(jd_preprocessing, cv_preprocessing)
+        jaccard_score = self.ranker.rank_jaccard(jd_preprocessing, cv_preprocessing)
         keyword_score = self.ranker.rank_keyword(cv_text, keyword)
+        jaccard_Keyword_score = self.ranker.rank_jaccard_keyword(cv_text, keyword)
         wmd_score = self.ranker.rank_wmd(jd_preprocessing, cv_preprocessing)
         bert_score = self.ranker.rank_bert(jd_embeddings, cv_embeddings)
         doc2vec_score = self.ranker.rank_doc2vec(jd_preprocessing, cv_preprocessing)
@@ -28,7 +30,9 @@ class Scorer:
         return {
             'file': key,
             'cosine_score': cosine_score,
+            'jaccard_score': jaccard_score,
             'keyword_score': keyword_score,
+            'jaccard_keyword': jaccard_Keyword_score,
             'cosign_keyword': (cosine_score * 0.25) + (keyword_score * 0.75),
             'bert_score': bert_score,
             'wmd_score': wmd_score,
