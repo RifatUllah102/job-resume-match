@@ -94,7 +94,7 @@ class Ranker:
         combined_cosine_keyword = (0.25 * cosine_score) + (0.75 * keyword_score)
 
         # Combine BERT score and WMD score with weights
-        combined_bert_wmd = (0.95 * bert_score) + (0.05 * wmd_score)
+        combined_bert_wmd = (0.90 * bert_score) + (0.10 * wmd_score)
 
         combined_score = (combined_bert_wmd * bert_weight) + (doc2vec_score * doc2vec_weight) + ((1 - (bert_weight+doc2vec_weight)) * combined_cosine_keyword)
         combined_score = round(combined_score, 2)

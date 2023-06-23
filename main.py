@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 from packages.scoring import Scorer
@@ -19,6 +20,18 @@ class RankBody(BaseModel):
 skill_corpus_file = "skill_corpus.pkl"
 
 app = FastAPI()
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 scorer = Scorer()
 model_builder = ModelBuilder()
 preprocessor = Preprocessor()
@@ -58,8 +71,6 @@ def get_resume_parser(filter):
 
 @app.get("/save-skills")
 def save_skillCorpus():
-    # Create an instance of SkillCorpus
     skill_corpus = SkillCorpus()
-    # Save the skill corpus to a file
     skill_corpus.save_corpus(skill_corpus_file)
     return 'OK'
