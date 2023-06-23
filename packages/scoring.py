@@ -56,16 +56,16 @@ class Scorer:
                 cv_path = cv_folder + "/" + cv_file
                 batch.append(cv_path)
                 if len(batch) == batch_size:
-                    futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_path, keyword) for cv_file in batch]
+                    futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_path, keyword) for cv_path in batch]
                     for future, cv_path in zip(futures, batch):
                         try:
                             result = future.result()
                             score_list.append(result)
                         except Exception as e:
-                            key = cv_path.split("/")[-1]
-                            print(f"Error processing {key}: {e}")
+                            print(f"Error processing {cv_path}: {e}")
                     batch = []
 
+            cv_path = cv_folder + "/" + cv_file
             if batch:
                 # Process the remaining files in the last batch
                 futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_path, keyword) for cv_path in batch]
@@ -74,7 +74,6 @@ class Scorer:
                         result = future.result()
                         score_list.append(result)
                     except Exception as e:
-                        key = cv_path.split("/")[-1]
-                        print(f"Error processing {key}: {e}")
+                        print(f"Error processing {cv_path}: {e}")
 
         return sorted(score_list, key=lambda x: x['score'], reverse=True)
