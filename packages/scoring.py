@@ -52,7 +52,7 @@ class Scorer:
         folder = os.listdir(cv_folder)
 
         score_list = []
-        batch_size = 4  # Choose an appropriate batch size
+        batch_size = 8  # Choose an appropriate batch size
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             batch = []

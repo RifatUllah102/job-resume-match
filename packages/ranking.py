@@ -55,8 +55,8 @@ class Ranker:
             union = cv_words.union(keyword_words)
 
             # Calculate Jaccard similarity
-            similarity = len(intersection) / len(union)
-            return similarity
+            similarity = (len(intersection) / len(union)) *100
+            return round(similarity, 2)
         except Exception as e:
             print("Error occurred during Jaccard keyword ranking:", str(e))
             return None
@@ -74,8 +74,8 @@ class Ranker:
             union = jd_words.union(cv_words)
 
             # Calculate Jaccard similarity
-            similarity = len(intersection) / len(union)
-            return similarity
+            similarity = (len(intersection) / len(union)) * 100
+            return round(similarity, 2)
         except Exception as e:
             print("Error occurred during Jaccard ranking:", str(e))
             return None
