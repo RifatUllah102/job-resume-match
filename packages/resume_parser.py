@@ -30,13 +30,18 @@ class CVParser:
             print(f"Error parsing CV: {str(e)}")
             return None
 
-    def extract_email(self, string):
-        r = re.compile(r'[\w\.-]+@[\w\.-]+')
-        return r.findall(string)
+    def extract_email(self, resume_text):
+        email = None
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        email_match = re.search(email_pattern, resume_text)
+        if email_match:
+            email = email_match.group()
 
-    def extract_phone(self, string):
+        return email
+
+    def extract_phone(self, resume_text):
         r = re.compile(r'(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})')
-        phone_numbers = r.findall(string)
+        phone_numbers = r.findall(resume_text)
         return [re.sub(r'\D', '', num) for num in phone_numbers]
 
     def extract_name(self, resume_text):
