@@ -48,11 +48,11 @@ class Embedder:
                 indexed_tokens = self.TOKENIZER.convert_tokens_to_ids(segment_with_special_tokens)
                 tokens_tensor = torch.tensor([indexed_tokens])
 
-                with torch.no_grad():
+                with torch.no_grad(), torch.cuda.amp.autocast() if torch.cuda.is_available() else torch.no_grad():
                     self.MODEL.eval()
                     if torch.cuda.is_available():
-                        tokens_tensor = tokens_tensor.to('cuda')
-                        self.MODEL.to('cuda')
+                        tokens_tensor = tokens_tensor.cuda()
+                        self.MODEL = self.MODEL.cuda()
                     outputs = self.MODEL(tokens_tensor)
                     embeddings = outputs[0].squeeze(0).cpu().numpy()
 
@@ -60,7 +60,7 @@ class Embedder:
 
             embeddings = np.concatenate(segment_embeddings, axis=0)
 
-            return torch.tensor(embeddings), embeddings
+            return torch.from_numpy(embeddings), embeddings
         except Exception as e:
             logging.error("Error occurred during BERT embedding: %s", str(e))
             return None, None
@@ -70,7 +70,7 @@ class Embedder:
             tokens = text.split()
             embeddings = [self.word2vec.wv[word] for word in tokens if word in self.word2vec.wv]
             embeddings = np.array(embeddings)
-            return torch.tensor(embeddings), embeddings
+            return torch.from_numpy(embeddings), embeddings
         except Exception as e:
             logging.error("Error occurred during Word2Vec embedding: %s", str(e))
             return None, None
@@ -84,8 +84,8 @@ class Embedder:
                 return None
 
             if torch.cuda.is_available():
-                bert_embeddings = bert_embeddings.to('cuda')
-                word2vec_embeddings = word2vec_embeddings.to('cuda')
+                bert_embeddings = bert_embeddings.cuda()
+                word2vec_embeddings = word2vec_embeddings.cuda()
 
             combined_embeddings = torch.cat((bert_embeddings, word2vec_embeddings), dim=1)
             return combined_embeddings

@@ -1,5 +1,6 @@
 import concurrent.futures
 import os
+import logging
 
 from .preprocessing import Preprocessor
 from .embedding import Embedder
@@ -14,7 +15,7 @@ class Scorer:
         self.embedder = Embedder()
         self.ranker = Ranker()
 
-    def process_cv(self, jd_preprocessing, jd_embeddings, cv_path, keyword = []):
+    def process_cv(self, jd_preprocessing, jd_embeddings, cv_path, keyword=[]):
         cv_text = self.preprocessor.read_pdf(cv_path)
         cv_preprocessing = self.preprocessor.preprocess(cv_text)
         cv_embeddings = self.embedder.embedding(cv_preprocessing)
@@ -47,6 +48,16 @@ class Scorer:
         jd_data = (jd_preprocessing, jd_embeddings)
         return jd_data
 
+    def process_batch(self, jd_preprocessing, jd_embeddings, batch, keyword=[]):
+        score_list = []
+        for cv_path in batch:
+            try:
+                result = self.process_cv(jd_preprocessing, jd_embeddings, cv_path, keyword)
+                score_list.append(result)
+            except Exception as e:
+                logging.error("Error processing %s: %s", cv_path, str(e))
+        return score_list
+
     def get_score(self, jd_path, cv_folder, keyword=[]):
         jd_preprocessing, jd_embeddings = self.get_jd_data(jd_path, keyword)
         folder = os.listdir(cv_folder)
@@ -54,30 +65,18 @@ class Scorer:
         score_list = []
         batch_size = 8  # Choose an appropriate batch size
 
-        with concurrent.futures.ProcessPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             batch = []
             for cv_file in folder:
                 cv_path = cv_folder + "/" + cv_file
                 batch.append(cv_path)
                 if len(batch) == batch_size:
-                    futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_path, keyword) for cv_path in batch]
-                    for future, cv_path in zip(futures, batch):
-                        try:
-                            result = future.result()
-                            score_list.append(result)
-                        except Exception as e:
-                            print(f"Error processing {cv_path}: {e}")
+                    score_list.extend(self.process_batch(jd_preprocessing, jd_embeddings, batch, keyword))
                     batch = []
 
             cv_path = cv_folder + "/" + cv_file
             if batch:
                 # Process the remaining files in the last batch
-                futures = [executor.submit(self.process_cv, jd_preprocessing, jd_embeddings, cv_path, keyword) for cv_path in batch]
-                for future, cv_path in zip(futures, batch):
-                    try:
-                        result = future.result()
-                        score_list.append(result)
-                    except Exception as e:
-                        print(f"Error processing {cv_path}: {e}")
+                score_list.extend(self.process_batch(jd_preprocessing, jd_embeddings, batch, keyword))
 
         return sorted(score_list, key=lambda x: x['score'], reverse=True)
