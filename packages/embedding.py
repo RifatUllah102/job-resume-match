@@ -1,9 +1,8 @@
-from gensim.models import Word2Vec
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import TfidfVectorizer
-from transformers import BertTokenizer, BertModel
 import torch
 import numpy as np
+import logging
+from gensim.models import Word2Vec
+from transformers import BertTokenizer, BertModel
 
 MAX_EMBEDDING_LENGTH = 500
 
@@ -13,15 +12,15 @@ class Embedder:
             self.TOKENIZER = BertTokenizer.from_pretrained('bert-base-uncased')
             self.MODEL = BertModel.from_pretrained('bert-base-uncased')
             self.word2vec = Word2Vec(min_count=20,
-                window=3,
-                vector_size=300,
-                sample=6e-5,
-                alpha=0.03,
-                min_alpha=0.0007,
-                negative=20
-            )
+                                      window=3,
+                                      vector_size=300,
+                                      sample=6e-5,
+                                      alpha=0.03,
+                                      min_alpha=0.0007,
+                                      negative=20
+                                    )
         except Exception as e:
-            print("Error occurred while initializing the Embedder:", str(e))
+            logging.error("Error occurred while initializing the Embedder: %s", str(e))
 
     def bert_embedding(self, text):
         try:
@@ -51,8 +50,11 @@ class Embedder:
 
                 with torch.no_grad():
                     self.MODEL.eval()
+                    if torch.cuda.is_available():
+                        tokens_tensor = tokens_tensor.to('cuda')
+                        self.MODEL.to('cuda')
                     outputs = self.MODEL(tokens_tensor)
-                    embeddings = outputs[0].squeeze(0).numpy()
+                    embeddings = outputs[0].squeeze(0).cpu().numpy()
 
                 segment_embeddings.append(embeddings)
 
@@ -60,7 +62,7 @@ class Embedder:
 
             return torch.tensor(embeddings), embeddings
         except Exception as e:
-            print("Error occurred during BERT embedding:", str(e))
+            logging.error("Error occurred during BERT embedding: %s", str(e))
             return None, None
 
     def word2vec_embedding(self, text):
@@ -70,7 +72,7 @@ class Embedder:
             embeddings = np.array(embeddings)
             return torch.tensor(embeddings), embeddings
         except Exception as e:
-            print("Error occurred during Word2Vec embedding:", str(e))
+            logging.error("Error occurred during Word2Vec embedding: %s", str(e))
             return None, None
 
     def embedding(self, text):
@@ -81,8 +83,12 @@ class Embedder:
             if bert_embeddings is None or word2vec_embeddings is None:
                 return None
 
+            if torch.cuda.is_available():
+                bert_embeddings = bert_embeddings.to('cuda')
+                word2vec_embeddings = word2vec_embeddings.to('cuda')
+
             combined_embeddings = torch.cat((bert_embeddings, word2vec_embeddings), dim=1)
             return combined_embeddings
         except Exception as e:
-            print("Error occurred during embedding:", str(e))
+            logging.error("Error occurred during embedding: %s", str(e))
             return None
