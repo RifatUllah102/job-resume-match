@@ -58,9 +58,18 @@ class CVParser:
         return email
 
     def extract_phone(self, resume_text):
-        r = re.compile(r'(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})')
-        phone_numbers = r.findall(resume_text)
-        return [re.sub(r'\D', '', num) for num in phone_numbers]
+        # r = re.compile(r'(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})')
+        # phone_numbers = r.findall(resume_text)
+        # return [re.sub(r'\D', '', num) for num in phone_numbers]
+        PHONE_REG = re.compile(r'[\+\(]?[1-9][0-9 .\-\(\)]{8,}[0-9]')
+        phone = re.findall(PHONE_REG, resume_text)
+
+        if phone:
+            number = ''.join(phone[0])
+
+            if resume_text.find(number) and len(number):
+                return number
+        return None
 
     def extract_name(self, resume_text):
         nlp_text = self.nlp(resume_text)
