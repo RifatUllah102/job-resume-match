@@ -5,8 +5,10 @@ from spacy.matcher import Matcher
 from nltk.corpus import stopwords
 from packages.skill_corpas import SkillCorpus
 
+skill_corpus_file = "skill_corpus.pkl"
+
 class CVParser:
-    def __init__(self, filePath):
+    def __init__(self, filePath=skill_corpus_file):
         self.nlp = spacy.load('en_core_web_sm')
         self.matcher = Matcher(self.nlp.vocab)
         self.skill_corpus = SkillCorpus()
@@ -16,6 +18,22 @@ class CVParser:
         try:
             file_data = parser.from_file(pdf_path)
             text = file_data['content']
+            cv = {
+                'email': self.extract_email(text),
+                'phone': self.extract_phone(text),
+                'name': self.extract_name(text),
+                'skills': self.extract_skills(text),
+                'education': self.extract_education(text),
+                'experience': self.extract_experience(text),
+                'keyword': self.extract_keyword(text, keyword)
+            }
+            return cv
+        except Exception as e:
+            print(f"Error parsing CV: {str(e)}")
+            return None
+
+    def parse_from_text(self, text, keyword=[]):
+        try:
             cv = {
                 'email': self.extract_email(text),
                 'phone': self.extract_phone(text),

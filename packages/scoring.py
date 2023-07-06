@@ -14,6 +14,7 @@ class Scorer:
         self.preprocessor = Preprocessor()
         self.embedder = Embedder()
         self.ranker = Ranker()
+        self.cvparser = CVParser(skill_corpus_file)
 
     def process_cv(self, jd_preprocessing, jd_embeddings, cv_path, keyword=[]):
         cv_text = self.preprocessor.read_pdf(cv_path)
@@ -28,6 +29,7 @@ class Scorer:
         doc2vec_score = self.ranker.rank_doc2vec(jd_preprocessing, cv_preprocessing)
         score = self.ranker.rank_combined(cosine_score, bert_score, doc2vec_score, keyword_score, wmd_score, 0.45, 0.15)
         key = cv_path.split("/")[-1]
+        cv_info = self.cvparser.parse_from_text(cv_text, keyword)
         return {
             'file': key,
             'cosine_score': cosine_score,
@@ -39,6 +41,7 @@ class Scorer:
             'wmd_score': wmd_score,
             'doc2vec_score': doc2vec_score,
             'score': score,
+            'cv': cv_info,
         }
 
     def get_jd_data(self, jd_path, keyword=[]):
